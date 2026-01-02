@@ -17,7 +17,7 @@
 | :---: | :-----------: |
 | Location | -69d22m31.25s，76d22m31.95s |
 | Diameter | 20cm |
-| Pointing | az=$359.61\degree$ alt=$45.72\degree$ |
+| Pointing | az= $359.61\degree$ alt= $45.72\degree$ |
 | Camera | QHY15-M |
 | FoV |  $9.23\degree\times9.19\degree$|
 | Pixels | 3108*3086 |
