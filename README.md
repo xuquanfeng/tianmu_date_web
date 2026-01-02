@@ -1,4 +1,4 @@
-<img class="proj_thumb" src="https://xuquanfeng.github.io/figs/tianmu.png" alt="" height="200px">
+<img class="proj_thumb" src="https://xuquanfeng.github.io/figs/tianmu.png" alt="" height="600px">
 
 # 数据网站使用说明
 ●平场和暗场数据：点击查询按钮后，可直接下载所有打包数据 All_data.zip。
