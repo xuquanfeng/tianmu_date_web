@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>南极天目计划原型机数据查询</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        h1 {
+            text-align: center; /* 将字体居中 */
+        }
+        h2 {
+            text-align: left; /* 将字体居中 */
+        }
+        h3 {
+            text-align: right; /* 将字体居中 */
+        }
+        h4 {
+            text-align: right; /* 将字体居中 */
+        }
+        .container {
+            display: flex;
+            justify-content: center; /* 水平居中对齐 */
+            gap: 20px; /* 添加左右间距 */
+            margin-bottom: 20px;
+        }
+        .button-container {
+            display: flex;
+            justify-content: space-around;
+            margin: 20px 0;
+        }
+        .button-container button {
+            padding: 10px 20px;
+            font-size: 16px;
+        }
+        .query-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center; /* 垂直居中对齐 */
+            max-width: 400px; /* 设置最大宽度 */
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .query-section label, 
+        .query-section input, 
+        .query-section select, 
+        .query-section button {
+            display: block;
+            margin: 10px auto;
+            text-align: center;
+        }
+        label, select, button {
+            margin: 10px 0; /* 增加间距 */
+        }
+        label {
+            font-size: 1.5em; /* 放大标签 */
+        }
+        select {
+            font-size: 1.6em; /* 放大选择框 */
+            padding: 10px; /* 增加内边距 */
+            width: 200px; /* 设置固定宽度 */
+        }
+        button {
+            font-size: 1.0em; /* 放大按钮 */
+            padding: 10px 20px; /* 增加内边距 */
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        #download-link {
+            display: none;
+            margin-top: 20px;
+        }
+        .file-list {
+            margin-top: 20px;
+        }
+        .file-item {
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center; /* 垂直居中对齐 */
+            justify-content: space-between; /* 在横轴上分配空间 */
+        }
+        .file-name {
+            margin-right: 10px;
+        }
+        .download-button {
+            padding: 5px 10px;
+            color: white;
+            background-color: #007bff;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        .download-button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+    <script>
+        function showSection(sectionId) {
+            document.querySelectorAll('.query-section').forEach(section => {
+                section.style.display = 'none';
+            });
+            document.getElementById(sectionId).style.display = 'block';
+            document.getElementById('result').innerHTML = ''; // 清空现有选项
+            document.getElementById('file-list').innerHTML = ''; // 清空现有选项
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            showSection('date-query'); // 页面加载时显示“通过日期查询数据”部分
+        });
+    </script>
+</head>
+<body>
+    <h1>南极天目计划原型机数据查询与下载</h1>
+    <h3>南极天目项目团队</h3>
+    
+    <h4>本页面技术支持：徐权峰(<a href="mailto:xuquanfeng@shao.ac.cn">xuquanfeng@shao.ac.cn</a>)、叶人豪(<a href="mailto:renhaoye@shao.ac.cn">renhaoye@shao.ac.cn</a>)</h3>
+
+    <!-- 说明文档链接 -->
+    <h4>
+        <p>点击跳转 <a href="https://docs.qq.com/doc/DTUNtcmhtY3d3THBU" download>说明文档</a> 以获取更多信息。</p>
+    </h4>
+
+    <!-- 下载文件脚本链接 -->
+    <h4 class="documentation-link">
+        <p>点击下载 <a href="/datapool/ATMA00/down_json.py" download>批量下载代码</a> 以获取按赤经赤纬查询的数据。</p>
+    </h4>
+
+    <!-- 下载文件脚本链接 -->
+    <h4 class="documentation-link">
+        <p>点击 <button onclick="downloadFile3('2024-09-23bias.zip')">下载bias数据</button> 以获取2024-09-20的10幅bias数据。</p>
+    </h4>
+
+    <div class="button-container">
+        <button onclick="showSection('date-query')">通过日期查询数据</button>
+        <button onclick="showSection('flat-dark-query')">查询平场和暗场数据</button>
+        <button onclick="showSection('ra-dec-query')">通过 RA 和 Dec 查询数据</button>
+    </div>
+
+    <div class="container">
+        <div id="date-query" class="query-section">
+            <h2>通过日期查询数据</h2>
+            <label for="date-picker">选择日期：</label>
+            <select id="date-picker"></select>
+            <button onclick="fetchFiles()">查询</button>
+        </div>
+        
+        <div id="flat-dark-query" class="query-section">
+            <h2>查询平场和暗场数据</h2>
+            <label for="date-picker">平场：</label>
+            <button onclick="fetchFilesFlat()">查询</button>
+            <label for="date-picker">暗场：</label>
+            <button onclick="fetchFilesDark()">查询</button>
+        </div>
+        
+        <div id="ra-dec-query" class="query-section">
+            <h2>通过 RA 和 Dec 查询数据</h2>
+            <label for="ra-input">RA (赤经)：</label>
+            <input type="text" id="ra-input" placeholder="例如：16.684">
+            <label for="dec-input">Dec (赤纬)：</label>
+            <input type="text" id="dec-input" placeholder="例如：-25.269">
+            <button onclick="fetchFilesByRaDec()">查询</button>
+        </div>
+    </div>
+    
+    <div id="result"></div>
+    <div id="file-list" class="file-list"></div>
+
+    <script>
+        let fetchedData = null;
+        async function loadFiles() {
+            const response = await fetch('/get-files');
+            const folders = await response.json();
+            const datePicker = document.getElementById('date-picker');
+            datePicker.innerHTML = ''; // 清空现有选项
+            folders.forEach(folder => {
+                const dateOption = document.createElement('option');
+                dateOption.value = folder;
+                dateOption.textContent = folder;
+                datePicker.appendChild(dateOption);
+            });
+        }
+
+        async function fetchFilesByRaDec() {
+            const ra = document.getElementById('ra-input').value;
+            const dec = document.getElementById('dec-input').value;
+            const resultDiv = document.getElementById('result');
+            const fileListDiv = document.getElementById('file-list');
+
+            try {
+                if (!ra || !dec) {
+                    resultDiv.textContent = '请输入 RA 和 Dec。';
+                    fileListDiv.innerHTML = ''; // 清空现有选项
+                    return;
+                }
+
+                resultDiv.textContent = `查询 RA:${ra} 和 DEC:${dec} 的文件：`;
+                fileListDiv.innerHTML = ''; // 清空现有选项
+
+                const response5 = await fetch(`/fetch-files/${ra}/${dec}`);
+
+                if (!response5.ok) {
+                    throw new Error(`查询响应失败:${JSON.stringify({ ra, dec })}`);
+                }
+
+                const data = await response5.json();
+                fetchedData = data;
+
+                if (data.length === 0) {
+                    resultDiv.textContent = '没有找到文件。';
+                    fileListDiv.innerHTML = '';
+                    return;
+                }
+                resultDiv.textContent = `得到 RA:${ra} 和 DEC:${dec} 的文件：`;
+                fileListDiv.innerHTML = ''; // 清空现有选项
+                const fileItem1 = document.createElement('div');                
+                fileItem1.className = 'file-item';
+                const fileName1 = document.createElement('span');
+                fileName1.className = 'file-name';
+                fileName1.textContent = 'result.json';
+
+                const downloadButton1 = document.createElement('button');
+                downloadButton1.className = 'download-button';
+                downloadButton1.textContent = '下载json';
+                downloadButton1.onclick = () => downloadFile3('result.json'); // 添加点击事件
+
+                fileItem1.appendChild(fileName1);
+                fileItem1.appendChild(downloadButton1);
+                fileListDiv.appendChild(fileItem1);
+
+                data.forEach(file => {
+                    const fileElement = document.createElement('div');
+                    fileElement.textContent = file;
+                    fileListDiv.appendChild(fileElement);
+                });
+            } catch (error) {
+                resultDiv.textContent = error.message;
+            }
+        }
+
+        async function fetchFilesFlat() {
+            const resultDiv = document.getElementById('result');
+            const fileListDiv = document.getElementById('file-list');
+            const chang = 'flat';
+
+            try {
+                const response2 = await fetch(`/get-files2/${chang}`);
+                if (!response2.ok) {
+                    throw new Error('无法获取文件列表。');
+                }
+                const files = await response2.json();
+
+                if (files.length === 0) {
+                    resultDiv.textContent = '没有找到文件。';
+                    fileListDiv.innerHTML = '';
+                    return;
+                }
+
+                // 显示文件列表
+                resultDiv.textContent = `显示 Flat 文件夹中的文件：`;
+                fileListDiv.innerHTML = ''; // 清空现有内容
+
+                const fileItem1 = document.createElement('div');                
+                fileItem1.className = 'file-item';
+                const fileName1 = document.createElement('span');
+                fileName1.className = 'file-name';
+                fileName1.textContent = 'All data.zip';
+
+                const downloadButton = document.createElement('button');
+                downloadButton.className = 'download-button';
+                downloadButton.textContent = '全部下载';
+                downloadButton.onclick = () => downloadFile2('flat'); // 添加点击事件
+
+                fileItem1.appendChild(fileName1);
+                fileItem1.appendChild(downloadButton);
+                fileListDiv.appendChild(fileItem1);
+                files.forEach(file => {
+                    const fileItem = document.createElement('div');
+                    fileItem.className = 'file-item';
+
+                    const fileName = document.createElement('span');
+                    fileName.className = 'file-name';
+                    fileName.textContent = file;
+
+                    const downloadButton = document.createElement('button');
+                    downloadButton.className = 'download-button';
+                    downloadButton.textContent = '下载';
+                    downloadButton.onclick = () => downloadFile1('flat', file); // 添加点击事件
+
+                    fileItem.appendChild(fileName);
+                    fileItem.appendChild(downloadButton);
+                    fileListDiv.appendChild(fileItem);
+                });
+            } catch (error) {
+                resultDiv.textContent = error.message;
+            }
+        }
+
+        async function fetchFilesDark() {
+            const resultDiv = document.getElementById('result');
+            const fileListDiv = document.getElementById('file-list');
+            const chang = 'Dark';
+
+            try {
+                const response2 = await fetch(`/get-files2/${chang}`);
+                if (!response2.ok) {
+                    throw new Error('无法获取文件列表。');
+                }
+                const files = await response2.json();
+
+                if (files.length === 0) {
+                    resultDiv.textContent = '没有找到文件。';
+                    fileListDiv.innerHTML = '';
+                    return;
+                }
+
+                // 显示文件列表
+                resultDiv.textContent = `显示 Dark 文件夹中的文件：`;
+                fileListDiv.innerHTML = ''; // 清空现有内容
+
+                const fileItem1 = document.createElement('div');                
+                fileItem1.className = 'file-item';
+                const fileName1 = document.createElement('span');
+                fileName1.className = 'file-name';
+                fileName1.textContent = 'All data.zip';
+                
+                const downloadButton = document.createElement('button');
+                downloadButton.className = 'download-button';
+                downloadButton.textContent = '全部下载';
+                downloadButton.onclick = () => downloadFile2('Dark'); // 添加点击事件
+
+                fileItem1.appendChild(fileName1);
+                fileItem1.appendChild(downloadButton);
+                fileListDiv.appendChild(fileItem1);
+
+                // <button onclick="fetchFilesByRaDec()">全部下载</button>
+                files.forEach(file => {
+                    const fileItem = document.createElement('div');
+                    fileItem.className = 'file-item';
+
+                    const fileName = document.createElement('span');
+                    fileName.className = 'file-name';
+                    fileName.textContent = file;
+
+                    const downloadButton = document.createElement('button');
+                    downloadButton.className = 'download-button';
+                    downloadButton.textContent = '下载';
+                    downloadButton.onclick = () => downloadFile1('Dark', file); // 添加点击事件
+
+                    fileItem.appendChild(fileName);
+                    fileItem.appendChild(downloadButton);
+                    fileListDiv.appendChild(fileItem);
+                });
+            } catch (error) {
+                resultDiv.textContent = error.message;
+            }
+        }
+
+        async function fetchFiles() {
+            const selectedDate = document.getElementById('date-picker').value;
+            const resultDiv = document.getElementById('result');
+            const fileListDiv = document.getElementById('file-list');
+
+            if (!selectedDate) {
+                resultDiv.textContent = '请选择一个日期。';
+                return;
+            }
+
+            // 获取该日期文件夹中的文件
+            try {
+                const response1 = await fetch(`/get-files1/${selectedDate}`);
+                if (!response1.ok) {
+                    throw new Error('无法获取文件列表。');
+                }
+                const files = await response1.json();
+
+                if (files.length === 0) {
+                    resultDiv.textContent = '没有找到文件。';
+                    fileListDiv.innerHTML = '';
+                    return;
+                }
+
+                // 显示文件列表
+                resultDiv.textContent = `显示 ${selectedDate} 文件夹中的文件：`;
+                fileListDiv.innerHTML = ''; // 清空现有内容
+
+                const fileItem1 = document.createElement('div');                
+                fileItem1.className = 'file-item';
+                const fileName1 = document.createElement('span');
+                fileName1.className = 'file-name';
+                fileName1.textContent = 'All data.zip';
+
+                const downloadButton = document.createElement('button');
+                downloadButton.className = 'download-button';
+                downloadButton.textContent = '全部下载';
+                downloadButton.onclick = () => downloadFile2(selectedDate); // 添加点击事件
+
+                fileItem1.appendChild(fileName1);
+                fileItem1.appendChild(downloadButton);
+                fileListDiv.appendChild(fileItem1);
+                files.forEach(file => {
+                    const fileItem = document.createElement('div');
+                    fileItem.className = 'file-item';
+
+                    const fileName = document.createElement('span');
+                    fileName.className = 'file-name';
+                    fileName.textContent = file;
+
+                    const downloadButton = document.createElement('button');
+                    downloadButton.className = 'download-button';
+                    downloadButton.textContent = '下载';
+                    downloadButton.onclick = () => downloadFile(selectedDate, file); // 添加点击事件
+
+                    fileItem.appendChild(fileName);
+                    fileItem.appendChild(downloadButton);
+                    fileListDiv.appendChild(fileItem);
+                });
+            } catch (error) {
+                resultDiv.textContent = error.message;
+            }
+        }
+
+        function downloadFile(date, file) {
+            const fileUrl = `/files/${date}/${file}`;
+            const a = document.createElement('a');
+            a.href = fileUrl;
+            a.download = file;
+            a.click();
+        }
+
+        function downloadFile1(date, file) {
+            const fileUrl = `/files1/${date}/${file}`;
+            const a = document.createElement('a');
+            a.href = fileUrl;
+            a.download = file;
+            a.click();
+        }
+
+        function downloadFile2(date) {
+            const fileUrl = `/files2/${date}.zip`;
+            const a = document.createElement('a');
+            a.href = fileUrl;
+            a.download = date;
+            a.click();
+        }
+
+        function downloadFile3(file) {
+            const fileUrl = `/files1/${file}`;
+            const a = document.createElement('a');
+            a.href = fileUrl;
+            a.download = file;
+            a.click();
+        }
+
+        // 页面加载时自动调用加载文件夹列表函数
+        window.onload = loadFiles;
+    </script>
+</body>
+</html>
